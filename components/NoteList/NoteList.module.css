@@ -42,7 +42,7 @@
     font-size: 14px;
     color: #495057;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -51,7 +51,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* Розставляє 3 елементи так, що проміжки між ними діляться порівно і реагують на ширину тега */
     margin-top: 12px;
     padding-top: 0;
     width: 100%;

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useDebounce } from 'use-debounce';
 import { fetchNotes } from '@/lib/api';
 import SearchBox from '@/components/SearchBox/SearchBox';
 import NoteList from '@/components/NoteList/NoteList';
@@ -15,9 +16,12 @@ export default function NotesClient() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Додаємо debounce на 300мс
+  const [debouncedSearch] = useDebounce(search, 300);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['notes', page, search],
-    queryFn: () => fetchNotes(page, search),
+    queryKey: ['notes', page, debouncedSearch],
+    queryFn: () => fetchNotes(page, debouncedSearch),
     placeholderData: keepPreviousData,
     refetchOnMount: false,
   });
@@ -31,7 +35,6 @@ export default function NotesClient() {
     <main className={css.container}>
       <div className={css.toolbar}>
         <SearchBox value={search} onChange={handleSearchChange} />
-
         {data && data.totalPages > 1 && (
           <Pagination
             page={page}
@@ -39,7 +42,6 @@ export default function NotesClient() {
             onPageChange={setPage}
           />
         )}
-
         <button
           className={css.createButton}
           onClick={() => setIsModalOpen(true)}
@@ -47,16 +49,13 @@ export default function NotesClient() {
           Create note +
         </button>
       </div>
-
       {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading notes.</p>}
-
       {data && data.notes.length > 0 ? (
         <NoteList notes={data.notes} />
       ) : (
         data && <p>No notes found.</p>
       )}
-
       {isModalOpen && (
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
           <NoteForm onClose={() => setIsModalOpen(false)} />

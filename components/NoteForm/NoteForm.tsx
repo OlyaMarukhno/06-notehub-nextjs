@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createNote } from '@/lib/api';
 import { NoteTag } from '@/types/note';
@@ -10,11 +11,24 @@ interface NoteFormProps {
   onClose?: () => void;
 }
 
-export default function NoteForm({ onClose }: NoteFormProps) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [tag, setTag] = useState<NoteTag>('Personal');
+interface FormValues {
+  title: string;
+  content: string;
+  tag: NoteTag;
+}
 
+const validationSchema = Yup.object({
+  title: Yup.string()
+    .min(3, 'Title must be at least 3 characters')
+    .max(50, 'Title must be at most 50 characters')
+    .required('Title is required'),
+  content: Yup.string().max(500, 'Content must be at most 500 characters'),
+  tag: Yup.string()
+    .oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'])
+    .required('Tag is required'),
+});
+
+export default function NoteForm({ onClose }: NoteFormProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -25,59 +39,77 @@ export default function NoteForm({ onClose }: NoteFormProps) {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate({ title, content, tag: tag as NoteTag });
+  const initialValues: FormValues = {
+    title: '',
+    content: '',
+    tag: 'Personal',
+  };
+
+  const handleSubmit = (values: FormValues) => {
+    mutation.mutate({
+      title: values.title,
+      content: values.content,
+      tag: values.tag,
+    });
   };
 
   return (
-    <form className={css.form} onSubmit={handleSubmit}>
-      <h2 className={css.title}>Create Note</h2>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ isSubmitting }) => (
+        <Form className={css.form}>
+          <h2 className={css.title}>Create Note</h2>
 
-      <div className={css.field}>
-        <label htmlFor="title">Title</label>
-        <input
-          id="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          className={css.input}
-        />
-      </div>
+          <div className={css.formGroup}>
+            <label htmlFor="title">Title</label>
+            <Field
+              id="title"
+              name="title"
+              type="text"
+              className={css.input}
+              placeholder="Enter title..."
+            />
+            <ErrorMessage name="title" component="div" className={css.error} />
+          </div>
 
-      <div className={css.field}>
-        <label htmlFor="tag">Tag</label>
-        <select
-          id="tag"
-          value={tag}
-          onChange={(e) => setTag(e.target.value as NoteTag)}
-          className={css.select}
-        >
-          <option value="Personal">Personal</option>
-          <option value="Work">Work</option>
-          <option value="Todo">Todo</option>
-          <option value="Meeting">Meeting</option>
-          <option value="Idea">Idea</option>
-        </select>
-      </div>
+          <div className={css.formGroup}>
+            <label htmlFor="tag">Tag</label>
+            <Field as="select" id="tag" name="tag" className={css.select}>
+              <option value="Personal">Personal</option>
+              <option value="Work">Work</option>
+              <option value="Todo">Todo</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Shopping">Shopping</option>
+            </Field>
+            <ErrorMessage name="tag" component="div" className={css.error} />
+          </div>
 
-      <div className={css.field}>
-        <label htmlFor="content">Content</label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-          className={css.textarea}
-        />
-      </div>
+          <div className={css.formGroup}>
+            <label htmlFor="content">Content</label>
+            <Field
+              as="textarea"
+              id="content"
+              name="content"
+              className={css.textarea}
+              placeholder="Enter content..."
+            />
+            <ErrorMessage name="content" component="div" className={css.error} />
+          </div>
 
-      <div className={css.actions}>
-        <button type="submit" disabled={mutation.isPending} className={css.submitButton}>
-          {mutation.isPending ? 'Saving...' : 'Save Note'}
-        </button>
-      </div>
-    </form>
+          <div className={css.actions}>
+            <button
+              type="submit"
+              disabled={isSubmitting || mutation.isPending}
+              className={css.submitButton}
+            >
+              {mutation.isPending ? 'Saving...' : 'Save Note'}
+            </button>
+          </div>
+        </Form>
+      )}
+    </Formik>
   );
 }

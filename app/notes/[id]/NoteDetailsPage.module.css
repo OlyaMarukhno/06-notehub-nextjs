@@ -33,7 +33,6 @@
     border: 1px solid #b6d4fe;
     border-radius: 16px;
     width: fit-content;
-    /* Гарантує, що тег займає лише свій вміст */
     margin-bottom: 24px;
 }
 
