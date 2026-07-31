@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteNote } from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { Note } from '@/types/note';
 import css from './NoteList.module.css';
 
@@ -12,7 +12,6 @@ interface NoteListProps {
 
 export default function NoteList({ notes }: NoteListProps) {
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: deleteNote,
@@ -33,12 +32,9 @@ export default function NoteList({ notes }: NoteListProps) {
           </div>
           <div className={css.footer}>
             <span className={css.tag}>{note.tag}</span>
-            <button
-              className={css.detailsButton}
-              onClick={() => router.push(`/notes/${note.id}`)}
-            >
+            <Link href={`/notes/${note.id}`} className={css.detailsButton}>
               View details
-            </button>
+            </Link>
             <button
               className={css.deleteButton}
               onClick={() => mutation.mutate(note.id)}

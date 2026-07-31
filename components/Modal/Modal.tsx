@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import css from './Modal.module.css';
 
 interface ModalProps {
@@ -16,12 +17,10 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
         onClose();
       }
     };
-
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
-
     return () => {
       document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
@@ -30,7 +29,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className={css.backdrop} onClick={onClose}>
       <div className={css.modal} onClick={(e) => e.stopPropagation()}>
         <button className={css.closeButton} onClick={onClose}>
@@ -38,6 +37,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
